@@ -6,27 +6,30 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import Dashboard from './components/dashboard'
 import {
   createBrowserRouter,
-  Navigate,
   RouterProvider,
 } from 'react-router-dom'
 import { RecoilRoot } from 'recoil';
-import { isAuthenticated } from './protectedLoader';
-
+import ProtectedLayout from './protectedLayout';
+import { isAuthenticated } from "./util"
 const router = createBrowserRouter(
   [
     {
       path: "/",
-      element: isAuthenticated() ? <Dashboard/> : <Navigate to="/login"/>,
-      errorElement: <div>404 Not Found</div>
+      element: isAuthenticated() ? <Dashboard/> : <LoginForm/>
     },
     {
       path: "/login",
       element: <LoginForm />,
     },
     {
-      path: "/dashboard",
-      element: isAuthenticated() ? <Dashboard /> : <Navigate to="/login" />,
-    }
+      element: <ProtectedLayout />,
+      children: [
+        {
+          path: "/dashboard",
+          element: <Dashboard />,
+        },
+      ],
+    },
   ]
 )
 
