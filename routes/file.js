@@ -17,28 +17,28 @@ fs.ensureDirSync(UPLOAD_DIR);
 
 
 const upload = multer({
-  dest: UPLOAD_DIR,
+    dest: UPLOAD_DIR,
 });
 
-router.post('/',auth ,upload.single('file'), (req, res) => {
-  const fileId = req.body.fileId;
-  const chunkNumber = req.body.chunkNumber;
-  
-  if (!fileId || !chunkNumber) {
-    return res.status(400).json({ error: 'Missing fileId or chunkNumber' });
-  }
-  
-  const chunkDir = path.join(UPLOAD_DIR, fileId);
-  fs.ensureDirSync(chunkDir);
-  
-  const chunkPath = path.join(chunkDir, `${chunkNumber}`);
-  fs.moveSync(req.file.path, chunkPath, { overwrite: true });
-  
-  return res.status(200).json({ message: 'Chunk uploaded' });
+router.post('/', auth, upload.single('file'), (req, res) => {
+    const fileId = req.body.fileId;
+    const chunkNumber = req.body.chunkNumber;
+
+    if (!fileId || !chunkNumber) {
+        return res.status(400).json({ error: 'Missing fileId or chunkNumber' });
+    }
+
+    const chunkDir = path.join(UPLOAD_DIR, fileId);
+    fs.ensureDirSync(chunkDir);
+
+    const chunkPath = path.join(chunkDir, `${chunkNumber}`);
+    fs.moveSync(req.file.path, chunkPath, { overwrite: true });
+
+    return res.status(200).json({ message: 'Chunk uploaded' });
 });
 
-router.post('/complete',auth ,async (req, res) => {
-    
+router.post('/complete', auth, async (req, res) => {
+
     const { fileName, fileId, totalChunks } = req.body;
 
     if (!fileName || !fileId || !totalChunks) {
@@ -72,7 +72,7 @@ router.post('/complete',auth ,async (req, res) => {
     }
 })
 
-const saveMetaData = async(fileName, filePath, user)=> {
+const saveMetaData = async (fileName, filePath, user) => {
     try {
         const data = {
             fileName: fileName,
@@ -80,16 +80,16 @@ const saveMetaData = async(fileName, filePath, user)=> {
             uploadedBy: user.id,
         }
         await MetaData.create(data);
-    } catch(error) {
+    } catch (error) {
         return res.status(500).json({ error: 'Failed to save metadata', details: error.message });
     }
 }
 
-router.get('/', auth, async(req,res)=>{
+router.get('/', auth, async (req, res) => {
     try {
-        const data = await MetaData.find({uploadedBy: req.user.id})
+        const data = await MetaData.find({ uploadedBy: req.user.id })
         return res.status(200).json({ data })
-    } catch(error) {
+    } catch (error) {
         return res.status(500).json({ error: 'Failed to fetch metadata', details: error.message });
     }
 })
@@ -98,39 +98,39 @@ router.get('/', auth, async(req,res)=>{
 router.patch('/:fileId', auth, async (req, res) => {
     const { fileId } = req.params;
     const { fileName } = req.body;
-    
+
     if (!fileName) {
         return res.status(400).json({ error: 'Missing fileName parameter' });
     }
-    
+
     try {
         // Find the file metadata
         const fileMetadata = await MetaData.findById(fileId);
-        
+
         if (!fileMetadata) {
             return res.status(404).json({ error: 'File not found' });
         }
-        
+
         // Check if the user owns this file
         if (fileMetadata.uploadedBy.toString() !== req.user.id) {
             return res.status(403).json({ error: 'Unauthorized to rename this file' });
         }
-        
+
         // Get the old file path
         const oldFilePath = fileMetadata.filePath;
-        
+
         // Create the new file path with the new name
         const directory = path.dirname(oldFilePath);
         const newFilePath = path.join(directory, fileName);
-        
+
         // Rename the file on the filesystem
         await fs.rename(oldFilePath, newFilePath);
-        
+
         // Update the metadata in the database
         fileMetadata.fileName = fileName;
         fileMetadata.filePath = newFilePath;
         await fileMetadata.save();
-        
+
         return res.status(200).json({ message: 'File renamed successfully', data: fileMetadata });
     } catch (error) {
         console.error('Error renaming file:', error);
@@ -141,31 +141,51 @@ router.patch('/:fileId', auth, async (req, res) => {
 // DELETE endpoint to delete a file
 router.delete('/:fileId', auth, async (req, res) => {
     const { fileId } = req.params;
-    
+
     try {
         // Find the file metadata
         const fileMetadata = await MetaData.findById(fileId);
-        
+
         if (!fileMetadata) {
             return res.status(404).json({ error: 'File not found' });
         }
-        
+
         // Check if the user owns this file
         if (fileMetadata.uploadedBy.toString() !== req.user.id) {
             return res.status(403).json({ error: 'Unauthorized to delete this file' });
         }
-        
+
         // Delete the file from the filesystem
         await fs.remove(fileMetadata.filePath);
-        
+
         // Delete the metadata from the database
         await MetaData.findByIdAndDelete(fileId);
-        
+
         return res.status(200).json({ message: 'File deleted successfully' });
     } catch (error) {
         console.error('Error deleting file:', error);
         return res.status(500).json({ error: 'Failed to delete file', details: error.message });
     }
 });
+
+router.get('/download/:filename', auth, async (req, res) => {
+    try {
+        console.log("Test");
+        
+        const filename = req.params.filename;
+        const filePath = path.join(__dirname, 'uploads', filename);
+        console.log({filePath});
+        
+        res.download(filePath, filename, (err) => {
+            if (err) {
+                console.error('File download error:', err);
+                res.status(404).send('File not found');
+            }
+        });
+    } catch (error) {
+        return res.status(500).json({ error: 'Failed to download file', details: error.message });
+
+    }
+})
 
 export default router;

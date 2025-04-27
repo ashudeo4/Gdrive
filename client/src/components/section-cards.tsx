@@ -81,7 +81,33 @@ export function SectionCards() {
       console.error("Error deleting file:", error)
     }
   }
+  const handleDownload = async (val:any) => {
+    try {
+      let filename = val.fileName;
+      const response = await fetch(`${baseUrl}/api/file/download/${filename}`, {
+        headers:
+          { 'Content-Type': 'application/json', 'Authorization': `${localStorage.getItem("token")}` }
+      });
 
+      if (!response.ok) {
+        throw new Error('File not found');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename; // Set the suggested file name
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url); // Clean up
+      
+    } catch(error) {
+      console.error("Error downlaoding file:", error)
+    }
+  }
   useEffect(() => {
     fetchData()
   }, [handleDelete, handleRenameSubmit])
@@ -123,6 +149,8 @@ export function SectionCards() {
                 <ContextMenuContent>
                   <ContextMenuItem onClick={() => handleRename(val._id, val.fileName)}>Rename</ContextMenuItem>
                   <ContextMenuItem onClick={() => handleDelete(val._id)}>Delete</ContextMenuItem>
+                  <ContextMenuItem onClick={() => handleDownload(val)}>Download</ContextMenuItem>
+
                 </ContextMenuContent>
               </ContextMenu>
             )}

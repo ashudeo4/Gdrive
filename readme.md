@@ -2,6 +2,7 @@
 ## Feature
 - Upload file
 - Rename and delete file
+- Download file
 - Search though files
 - Google login and register support
 - For UI used shadcn
