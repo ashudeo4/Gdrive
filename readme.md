@@ -6,6 +6,7 @@
 - Search though files
 - Google login and register support
 - For UI used shadcn
+- For downloading, rename or delete double click on file
 
 ## Deployment
 - Currently deployed on Oracle always free servers
