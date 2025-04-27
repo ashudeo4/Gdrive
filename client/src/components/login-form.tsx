@@ -16,27 +16,26 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-
+  const baseUrl = import.meta.env.VITE_BACKEND_URL;
   const [, setIsAuthenticated] = useRecoilState(isAuthenticatedState);
   const [, setUserInfo ]= useRecoilState(userInfo);
   const navigate = useNavigate()
   const responseMessage = async (response: any) => {
-    const resp = await fetch('http://localhost:3000/api/auth/google', {
+
+    const resp = await fetch(`${baseUrl}/api/auth/google`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: response.credential }),
       
     });
     const data = await resp.json();
-    console.log(data);
-    
     localStorage.setItem("token", data.token);
     setIsAuthenticated(true)
     setUserInfo({name: data.name, email: data.email})
     navigate("/dashboard")
   };
   const signUpResponseMessage = async (response: any) => {
-    const resp = await fetch('http://localhost:3000/api/users/google', {
+    const resp = await fetch(`${baseUrl}/api/users/google`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: response.credential }),

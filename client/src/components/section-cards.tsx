@@ -21,13 +21,15 @@ interface FileItem {
 }
 
 export function SectionCards() {
+  const baseUrl = import.meta.env.VITE_BACKEND_URL;
+
   const [file, setFile] = useState<FileItem[]>([])
   const [renamingFile, setRenamingFile] = useState<string | null>(null)
   const [newFileName, setNewFileName] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
 
   const fetchData = async () => {
-    const response = await fetch("http://localhost:3000/api/file", {
+    const response = await fetch(`${baseUrl}/api/file`, {
       headers:
         { 'Content-Type': 'application/json', 'Authorization': `${localStorage.getItem("token")}` }
     })
@@ -42,7 +44,7 @@ export function SectionCards() {
 
   const handleRenameSubmit = async (fileId: string) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/file/${fileId}`, {
+      const response = await fetch(`${baseUrl}/api/file/${fileId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -64,7 +66,7 @@ export function SectionCards() {
 
   const handleDelete = async (fileId: string) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/file/${fileId}`, {
+      const response = await fetch(`${baseUrl}/api/file/${fileId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

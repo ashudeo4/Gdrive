@@ -14,6 +14,8 @@ const UploadFile = () => {
   };
 
   const uploadFile = async () => {
+  const baseUrl = import.meta.env.VITE_BACKEND_URL;
+
     if (!file) return;
 
     setUploading(true);
@@ -33,7 +35,7 @@ const UploadFile = () => {
       formData.append('fileId', fileId);
       formData.append('chunkNumber', i.toString());
       
-      await fetch('http://localhost:3000/api/file', {
+      await fetch(`${baseUrl}/api/file`, {
         method: 'POST',
         body: formData,
         headers: {
@@ -45,7 +47,7 @@ const UploadFile = () => {
     }
 
     // Tell server to assemble all chunks
-    await fetch('http://localhost:3000/api/file/complete', {
+    await fetch(`${baseUrl}/api/file/complete`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `${localStorage.getItem("token")}` },
       body: JSON.stringify({ fileName: file.name, fileId, totalChunks }),

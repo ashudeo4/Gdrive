@@ -19,6 +19,9 @@ app.use(express.urlencoded({ extended: false }));
 // app.use(express.static("client/build"));
 connectDB();
 
+app.get("/test", (req, res)=>{
+  res.json({msg: "Working"})
+})
 app.use("/api/auth", authRouter)
 app.use("/api/users", usersRouter)
 app.use("/api/file", uploadRouter)
